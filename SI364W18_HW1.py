@@ -5,24 +5,29 @@
 #################################
 
 ## List below here, in a comment/comments, the people you worked with on this assignment AND any resources you used to find code (50 point deduction for not doing so). If none, write "None".
-
+# https://www.yelp.com/developers/documentation/v3/get_started
 
 
 ## [PROBLEM 1] - 150 points
 ## Below is code for one of the simplest possible Flask applications. Edit the code so that once you run this application locally and go to the URL 'http://localhost:5000/class', you see a page that says "Welcome to SI 364!"
 
-from flask import Flask
+from flask import Flask, render_template, request
+import requests
+import json
+import yelp_info
+from yelpapi import YelpAPI
+
+
 app = Flask(__name__)
 app.debug = True
 
 @app.route('/')
 def hello_to_you():
-    return 'Hello!'
+	return '<h1>Hello World</h1>'
 
-
-if __name__ == '__main__':
-    app.run()
-
+@app.route('/class')
+def welcome_to_you():
+	return '<h1>Welcome to SI 364!</h1>'
 
 ## [PROBLEM 2] - 250 points
 ## Edit the code chunk above again so that if you go to the URL 'http://localhost:5000/movie/<name-of-movie-here-one-word>' you see a big dictionary of data on the page. For example, if you go to the URL 'http://localhost:5000/movie/ratatouille', you should see something like the data shown in the included file sample_ratatouille_data.txt, which contains data about the animated movie Ratatouille. However, if you go to the url http://localhost:5000/movie/titanic, you should get different data, and if you go to the url 'http://localhost:5000/movie/dsagdsgskfsl' for example, you should see data on the page that looks like this:
@@ -32,12 +37,18 @@ if __name__ == '__main__':
 #  "results": []
 # }
 
-
 ## You should use the iTunes Search API to get that data.
 ## Docs for that API are here: https://affiliate.itunes.apple.com/resources/documentation/itunes-store-web-service-search-api/
 ## Of course, you'll also need the requests library and knowledge of how to make a request to a REST API for data.
 
 ## Run the app locally (repeatedly) and try these URLs out!
+
+@app.route('/movie/<movie_title>')
+def get_movie_info(movie_title):
+	inp = 'https://itunes.apple.com/search?term=' + movie_title
+	json_file = requests.get(inp)
+	text = json_file.text
+	return text
 
 ## [PROBLEM 3] - 250 points
 
@@ -45,6 +56,26 @@ if __name__ == '__main__':
 ## Once you enter a number and submit it to the form, you should then see a web page that says "Double your favorite number is <number>". For example, if you enter 2 into the form, you should then see a page that says "Double your favorite number is 4". Careful about types in your Python code!
 ## You can assume a user will always enter a number only.
 
+@app.route('/question')
+def favorite_number():
+	s = """<!DOCTYPE html>
+<html>
+<body>
+<form action='/result' method='POST'>
+  FAVORITE NUMBER:<br>
+  <input type="text" name="favorite" value="">
+  <br>
+  <input type="submit" value="Submit">
+</form>
+</body>
+</html>"""
+	return s
+
+@app.route('/result', methods=['POST', 'GET'])
+def display():
+	if request.method == 'POST':
+		fav_num = request.form['favorite']
+		return 'Double your favorite number is ' + str(int(fav_num) * 2)
 
 ## [PROBLEM 4] - 350 points
 
@@ -65,3 +96,40 @@ if __name__ == '__main__':
 # You can assume that a user will give you the type of input/response you expect in your form; you do not need to handle errors or user confusion. (e.g. if your form asks for a name, you can assume a user will type a reasonable name; if your form asks for a number, you can assume a user will type a reasonable number; if your form asks the user to select a checkbox, you can assume they will do that.)
 
 # Points will be assigned for each specification in the problem.
+
+@app.route('/problem4form')
+def interact_form():
+	s = """<!DOCTYPE html>
+<html>
+<body>
+<form action='/results' method='POST'>
+  <h1>Look for the best restaurants in your area!</h1>
+  ENTER CITY HERE:<br>
+  <input type="text" name="restaurants" value="">
+  <br>
+  <input type="submit" value="Submit">
+</form>
+</body>
+</html>"""
+	return s
+
+@app.route('/results', methods = ['POST', 'GET'])
+def results():
+	# Yelp api
+	yelp_api = YelpAPI(yelp_info.client_id, yelp_info.client_secret)
+	#list for the results
+	restaurant_name = ""
+	if request.method == 'POST':
+		loc = request.form['restaurants']
+		yelp = yelp_api.search_query(term='restaurant', location=loc, sort_by='rating', limit=3, radius=40000)
+		for restaurant in yelp["businesses"]:
+			restaurant_name = restaurant_name + ", " + restaurant['name']
+	
+	return "Try out these restaurants!\n\n" +  restaurant_name[2:]
+
+if __name__ == '__main__':
+    app.run()
+
+
+
+
