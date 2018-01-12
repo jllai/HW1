@@ -125,7 +125,9 @@ def results():
 		for restaurant in yelp["businesses"]:
 			restaurant_name = restaurant_name + ", " + restaurant['name']
 	
-	return "Try out these restaurants!\n\n" +  restaurant_name[2:]
+	return "<h1>Try out these restaurants!</h1>" +  restaurant_name[2:]
+
+
 
 if __name__ == '__main__':
     app.run()
