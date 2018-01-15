@@ -97,12 +97,12 @@ def display():
 
 # Points will be assigned for each specification in the problem.
 
-@app.route('/problem4form')
+@app.route('/problem4form', methods = ['POST', 'GET'])
 def interact_form():
 	s = """<!DOCTYPE html>
 <html>
 <body>
-<form action='/results' method='POST'>
+<form action='/problem4form' method='POST'>
   <h1>Look for the best restaurants in your area!</h1>
   ENTER CITY HERE:<br>
   <input type="text" name="restaurants" value="">
@@ -111,10 +111,7 @@ def interact_form():
 </form>
 </body>
 </html>"""
-	return s
 
-@app.route('/results', methods = ['POST', 'GET'])
-def results():
 	# Yelp api
 	yelp_api = YelpAPI(yelp_info.client_id, yelp_info.client_secret)
 	#list for the results
@@ -124,8 +121,10 @@ def results():
 		yelp = yelp_api.search_query(term='restaurant', location=loc, sort_by='rating', limit=3, radius=40000)
 		for restaurant in yelp["businesses"]:
 			restaurant_name = restaurant_name + ", " + restaurant['name']
-	
-	return "<h1>Try out these restaurants!</h1>" +  restaurant_name[2:]
+		return s + '<br><br>' + "<h1>Try out these restaurants!</h1>" +  restaurant_name[2:]
+	else:
+		return s
+
 
 
 
